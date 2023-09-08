@@ -8,7 +8,7 @@ import CaptionPanel from "./CaptionPanel";
 
 const SubtitleEditorPanel = () => {
   return (
-    <Tabs defaultValue="Caption">
+    <Tabs defaultValue="Caption" className="h-full">
       <TabsList>
         <TabsTrigger value="Caption" className="flex gap-x-2">
           <FileTextIcon />
