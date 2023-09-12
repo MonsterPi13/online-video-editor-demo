@@ -1,4 +1,5 @@
 import SubtitleEditorPanel from "@/components/shared/SubtitleConfigPanel";
+import VideoPreviewPanel from "@/components/shared/VideoPreviewPanel";
 
 export default function Home() {
   return (
@@ -7,11 +8,13 @@ export default function Home() {
         <h1 className="text-white">online-video-editor</h1>
       </header>
 
-      <main className="flex-1 flex gap-x-6">
+      <main className="flex-1 flex gap-x-6 p-6">
         <div className="min-w-[490px] w-[30%] p-4 h-full">
           <SubtitleEditorPanel />
         </div>
-        <div className="min-w-[500px] flex-1 bg-yellow-200 h-full"></div>
+        <div className="min-w-[500px] flex-1 h-full">
+          <VideoPreviewPanel />
+        </div>
       </main>
     </div>
   );
