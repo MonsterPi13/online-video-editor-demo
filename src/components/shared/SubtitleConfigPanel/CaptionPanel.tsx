@@ -20,6 +20,9 @@ const CaptionPanel = () => {
   // TODO: How to merge the caption array & emoji array content
   // currently leave the emoji alone, just calculate the entire text
   const [captionsList, setCaptionList] = useState<IWordItem[][]>();
+  const [startTime, setStartTime] = useState(0);
+  const [endTime, setEndTime] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   useEffect(() => {
     const { captionPlans, emojiPlans } = CURATED_CLIP_DEMO.overlayPlans;
@@ -27,6 +30,10 @@ const CaptionPanel = () => {
       const emojiPlan = emojiPlans[index];
       const { sceneId, frames, source } = caption;
       const { frames: emojiFrames } = emojiPlan;
+      const { offsetStartMs, offsetEndMs } = caption.source;
+
+      setStartTime(offsetStartMs);
+      setEndTime(offsetEndMs);
 
       const totalFrames: IWordItem[][] = frames.map((frame, index) => {
         const frames: IWordItem[] = frame.elements.map((word, innerIndex) => {
@@ -47,6 +54,18 @@ const CaptionPanel = () => {
       });
 
       setCaptionList(totalFrames);
+
+      const interval = setInterval(() => {
+        setCurrentTime((prevTime) => {
+          if (prevTime !== 0 && prevTime + offsetStartMs >= offsetEndMs) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prevTime + 10;
+        });
+      }, 10);
+
+      return () => clearInterval(interval);
     });
   }, []);
 
@@ -65,8 +84,13 @@ const CaptionPanel = () => {
 
       <div className="flex flex-col text-gray-500">
         <div className="flex items-end">
-          <p className="text-base leading-none">00:00</p>
-          <p className="text-xs leading-none">.00</p>
+          <p className="text-base leading-none">
+            00:
+            {currentTime / 1000 < 10
+              ? `0${(currentTime / 1000).toFixed(0)}`
+              : (currentTime / 1000).toFixed(0)}
+          </p>
+          <p className="text-xs leading-none">.{currentTime % 100}</p>
         </div>
       </div>
 
@@ -93,18 +117,24 @@ const CaptionPanel = () => {
                   </div>
                 )}
                 {word.type === "word" && (
-                  <div
-                    className={cn(
-                      "relative cursor-pointer  hover:bg-[rgb(43,47,59)]",
-                      word.color === 2
-                        ? "text-[rgb(255,253,3)]"
-                        : word.color === 1
-                        ? "text-[rgb(4,248,39)]"
-                        : "text-slate-200"
-                    )}
-                    data-word-id={word.id}
-                  >
-                    {word.content}
+                  <div className="flex relative text-white">
+                    {word.offsetStartMs <= startTime + currentTime &&
+                      word.offsetEndMs > startTime + currentTime && (
+                        <div className="caption_word--animation" />
+                      )}
+                    <div
+                      className={cn(
+                        "relative cursor-pointer  hover:bg-[rgb(43,47,59)]",
+                        word.color === 2
+                          ? "text-[rgb(255,253,3)]"
+                          : word.color === 1
+                          ? "text-[rgb(4,248,39)]"
+                          : "text-slate-200"
+                      )}
+                      data-word-id={word.id}
+                    >
+                      {word.content}
+                    </div>
                   </div>
                 )}
               </div>
