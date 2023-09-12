@@ -55,17 +55,24 @@ const CaptionPanel = () => {
 
       setCaptionList(totalFrames);
 
-      const interval = setInterval(() => {
-        setCurrentTime((prevTime) => {
-          if (prevTime !== 0 && prevTime + offsetStartMs >= offsetEndMs) {
-            clearInterval(interval);
-            return 0;
-          }
-          return prevTime + 10;
-        });
-      }, 10);
+      let startTime = 0;
+      const plusTime = (currentTime: number) => {
+        if (startTime === 0) {
+          startTime = currentTime;
+        }
 
-      return () => clearInterval(interval);
+        setCurrentTime((prevTime) => {
+          if (prevTime + offsetStartMs < offsetEndMs) {
+            requestAnimationFrame(plusTime);
+          }
+
+          return currentTime - startTime;
+        });
+      };
+
+      const rafId = requestAnimationFrame(plusTime);
+
+      return () => cancelAnimationFrame(rafId);
     });
   }, []);
 
@@ -90,20 +97,25 @@ const CaptionPanel = () => {
               ? `0${(currentTime / 1000).toFixed(0)}`
               : (currentTime / 1000).toFixed(0)}
           </p>
-          <p className="text-xs leading-none">.{currentTime % 100}</p>
+          <p className="text-xs leading-none">
+            .{(currentTime % 100).toFixed(0)}
+          </p>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center mt-8 mb-8">
         {captionsList?.map((caption, index) => (
-          <>
-            {caption.map((word, innerIndex) => (
-              <div
-                className="flex gap-1 shrink-0 border-[2px] border-transparent items-center h-8"
-                key={`${index}-${innerIndex}-${word.id}`}
-              >
-                {word.type === "image" && (
-                  <div className="pl-[2px] cursor-pointer">
+          <div
+            className="flex gap-1 shrink-0 border-[2px] border-transparent items-center h-8"
+            key={`${index}`}
+          >
+            {caption.map((word, innerIndex) => {
+              if (word.type === "image") {
+                return (
+                  <div
+                    className="pl-[2px] cursor-pointer"
+                    key={`${index}-${innerIndex}-${word.id}`}
+                  >
                     <div className="flex items-center justify-center bg-[rgb(43,47,59)] rounded w-[22px] h-[22px] hover:bg-[rgb(86,94,118)]">
                       <Image
                         alt={word.content}
@@ -115,9 +127,15 @@ const CaptionPanel = () => {
                       />
                     </div>
                   </div>
-                )}
-                {word.type === "word" && (
-                  <div className="flex relative text-white">
+                );
+              }
+
+              if (word.type === "word") {
+                return (
+                  <div
+                    className="flex relative text-white"
+                    key={`${index}-${innerIndex}-${word.id}`}
+                  >
                     {word.offsetStartMs <= startTime + currentTime &&
                       word.offsetEndMs > startTime + currentTime && (
                         <div className="caption_word--animation" />
@@ -136,10 +154,10 @@ const CaptionPanel = () => {
                       {word.content}
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
-          </>
+                );
+              }
+            })}
+          </div>
         ))}
       </div>
     </section>
